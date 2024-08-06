@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "format": "prettier --write . && git add -A .",
+    "lint": "next lint --fix",
     "prepare": "husky install"
   },
   "dependencies": {
