@@ -1,29 +1,53 @@
-import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
-import { login, signup } from './actions';
+'use client';
+import { Button } from '@nextui-org/button';
+import { Card } from '@nextui-org/card';
+import { Input } from '@nextui-org/input';
+import { Checkbox, Link, Spacer } from '@nextui-org/react';
+import { useState } from 'react';
+import { HiEye, HiEyeSlash } from 'react-icons/hi2';
+import { login } from './actions';
 
-export default async function LoginPage() {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  if (data) {
-    redirect('/');
-  }
+export default function LoginPage() {
+  const [error, setError] = useState<string | null>(null);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+    const error = await login(formData);
+    setError(error);
+  };
+
+  const [isVisible, setIsVisible] = useState(false);
+  const toggleVisibility = () => setIsVisible(!isVisible);
   return (
-    <form>
-      <div className="flex flex-col bg-indigo-500">
-        <label htmlFor="email">Email:</label>
-        <input id="email" name="email" type="email" required className="text-indigo-950" />
-        <label htmlFor="password">Password:</label>
-        <input id="password" name="password" type="password" required className="text-indigo-950" />
-        <div className="flex gap-4">
-          <button formAction={login} className="bg-lime-600 px-2 py-1 hover:bg-lime-700">
-            Log in
-          </button>
-          <button formAction={signup} className="bg-lime-600 px-2 py-1 hover:bg-lime-700">
-            Sign up
-          </button>
+    <Card className="p-4">
+      <form className="flex w-full flex-col items-center gap-4" onSubmit={handleSubmit}>
+        <h1>NextUI Login</h1>
+        <Spacer y={1} />
+        <Input isClearable fullWidth color="primary" size="lg" placeholder="Email" />
+        <Spacer y={1} />
+        <Input
+          fullWidth
+          color="primary"
+          size="lg"
+          placeholder="Password"
+          type={isVisible ? 'text' : 'password'}
+          endContent={
+            <button onClick={toggleVisibility}>{isVisible ? <HiEyeSlash /> : <HiEye />}</button>
+          }
+        />
+        {error && <p className="text-red-500">{error}</p>}
+        <Spacer y={1} />
+        <div className="flex w-full justify-between">
+          <Checkbox>
+            <span>Remember me</span>
+          </Checkbox>
+          <Link href="/auth/forgot-password">Forgot password?</Link>
         </div>
-      </div>
-    </form>
+        <Button type="submit" className="w-full" color="primary">
+          Sign in
+        </Button>
+      </form>
+    </Card>
   );
 }
