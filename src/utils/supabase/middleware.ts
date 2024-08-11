@@ -2,6 +2,20 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+
+    const guestUrls = [
+        '/auth/login',
+        '/auth/sign-up',
+        '/auth/forgot-password',
+        '/auth/reset-password',
+    ]
+
+    const privateUrls = [
+        "/dashboard",
+        "/profile",
+        "/settings"
+    ]
+
     let supabaseResponse = NextResponse.next({
         request,
     })
@@ -35,9 +49,29 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // if (
+    //     !user &&
+    //     !request.nextUrl.pathname.startsWith('/auth')
+    // ) {
+    //     // no user, potentially respond by redirecting the user to the login page
+    //     const url = request.nextUrl.clone()
+    //     url.pathname = '/auth/login'
+    //     return NextResponse.redirect(url)
+    // }
+
+    if (
+        user &&
+        guestUrls.includes(request.nextUrl.pathname)
+    ) {
+        // user is logged in, potentially respond by redirecting the user to the dashboard
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+    }
+
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/auth')
+        privateUrls.includes(request.nextUrl.pathname)
     ) {
         // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
@@ -46,15 +80,8 @@ export async function updateSession(request: NextRequest) {
     }
 
 
-    if (
-        user &&
-        request.nextUrl.pathname.startsWith('/auth/login')
-    ) {
-        // user is logged in, potentially respond by redirecting the user to the home page
-        const url = request.nextUrl.clone()
-        url.pathname = '/'
-        return NextResponse.redirect(url)
-    }
+
+
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
     // creating a new response object with NextResponse.next() make sure to:

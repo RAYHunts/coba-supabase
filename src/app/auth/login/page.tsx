@@ -1,42 +1,67 @@
 'use client';
+import { UserLogin, UserLoginType } from '@/libs/schema';
 import { Button } from '@nextui-org/button';
 import { Card } from '@nextui-org/card';
 import { Input } from '@nextui-org/input';
 import { Checkbox, Link, Spacer } from '@nextui-org/react';
 import { useState } from 'react';
 import { HiEye, HiEyeSlash } from 'react-icons/hi2';
-import { login } from './actions';
 
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<UserLoginType | null>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const toggleVisibility = () => setIsVisible(!isVisible);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     const formData = new FormData(e.currentTarget);
-    const error = await login(formData);
-    setError(error);
+
+    const data = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+    };
+
+    const result = UserLogin.safeParse(data);
+
+    if (!result.success) {
+      setFormErrors({ ...formErrors, email: result.error.email.message });
+
+      return;
+    }
+
+    // Call your login function here
+    // await login(data);
   };
 
-  const [isVisible, setIsVisible] = useState(false);
-  const toggleVisibility = () => setIsVisible(!isVisible);
   return (
     <Card className="p-4">
       <form className="flex w-full flex-col items-center gap-4" onSubmit={handleSubmit}>
-        <h1>NextUI Login</h1>
+        <h1 className="text-2xl font-bold">NextUI Login</h1>
         <Spacer y={1} />
-        <Input isClearable fullWidth color="primary" size="lg" placeholder="Email" />
+        <Input
+          isClearable
+          fullWidth
+          color="primary"
+          size="lg"
+          placeholder="Email"
+          name="email"
+          errorMessage={formErrors?.email}
+        />
         <Spacer y={1} />
         <Input
           fullWidth
           color="primary"
           size="lg"
           placeholder="Password"
+          name="password"
+          errorMessage={<span className="text-red-500">{formErrors?.password}</span>}
           type={isVisible ? 'text' : 'password'}
           endContent={
-            <button onClick={toggleVisibility}>{isVisible ? <HiEyeSlash /> : <HiEye />}</button>
+            <button type="button" onClick={toggleVisibility}>
+              {isVisible ? <HiEyeSlash /> : <HiEye />}
+            </button>
           }
         />
-        {error && <p className="text-red-500">{error}</p>}
         <Spacer y={1} />
         <div className="flex w-full justify-between">
           <Checkbox>
